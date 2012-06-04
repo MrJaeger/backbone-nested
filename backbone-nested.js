@@ -229,7 +229,15 @@
       for(var att in atts) {
         if(atts[att] instanceof Backbone.NestedModel && _super._nestedModels.indexOf(att) === -1) {
           atts[att].on('all', function(eventName, model, text) {
-            _super.trigger('notify', eventName, att, model, text);
+            var colon = eventName.indexOf(':');
+            if(colon !== -1) {
+              var realEventName = eventName.substring(0, colon+1) + att + '.' + eventName.substring(colon+1);
+              _super.trigger(realEventName, model, text);
+              _super.trigger(eventName.substring(0,colon+1) + att, model, text)
+            } else {
+              _super.trigger(eventName, model, text);
+              _super.trigger(eventName+':'+att, model, text);
+            }
           });
           _super._nestedModels.push(att);
         }
