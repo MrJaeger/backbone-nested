@@ -53,7 +53,10 @@
         , _super = this;
 
       var checkForNestedModels = function(attrPath, val) {
-        if(attrPath.length === 1 && newAttrs[attrPath[0]] instanceof Backbone.NestedModel) return true;
+        if(attrPath.length === 1 && newAttrs[attrPath[0]] instanceof Backbone.NestedModel) {
+          newAttrs[attrPath[0]] = val;
+          return true;
+        }
         for(;counter < attrPath.length-1; counter++) {
           var attr = newAttrs[attrPath[counter]]
           if(attr instanceof Backbone.NestedModel) {
@@ -82,7 +85,11 @@
         for (var attrStr in attrs){
           attrPath = Backbone.NestedModel.attrPath(attrStr);
           nestedModelFound = checkForNestedModels(attrPath, attrs[attrStr]);
-          nestedModelFound ? Backbone.NestedModel.__super__.set.call(this, attrs[attrStr], opts) : this._mergeAttr(newAttrs, attrPath, attrs[attrStr], opts);
+          if(nestedModelFound)
+            newAttrs[attrStr] = attrs[attrStr];
+          else { 
+            this._mergeAttr(newAttrs, attrPath, attrs[attrStr], opts);
+          }
         }
       }
       var setReturn = Backbone.NestedModel.__super__.set.call(this, newAttrs, opts);
