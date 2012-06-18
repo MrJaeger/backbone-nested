@@ -230,28 +230,30 @@
     },
 
     _updateNestedModels: function() {
-      var _super = this
-        , atts = _super.attributes;
-      _super._nestedModels = _super._nestedModels || [];
+      var atts = this.attributes;
+      this._nestedModels = this._nestedModels || [];
       for(var att in atts) {
         if(atts[att] instanceof Backbone.NestedModel && (atts[att].nested == false || atts[att].nested == undefined)) {
-          (function(name) {
-            atts[name].on('all', function(eventName, model, text) {
+          (function(name, sup) {
+            var model = atts[name];
+            model.on('all', function(eventName, model, text) {
               var colon = eventName.indexOf(':');
               if(colon !== -1) {
                 var realEventName = eventName.substring(0, colon+1) + name + '.' + eventName.substring(colon+1);
-                _super.trigger(realEventName, model, text);
+                model.superModel.trigger(realEventName, model, text);
               } else {
-                _super.trigger(eventName, model, text);
-                _super.trigger(eventName+':'+name, model, text);
+                model.superModel.trigger(eventName, model, text);
+                model.superModel.trigger(eventName+':'+name, model, text);
               }
             });
-            atts[name].nested = true;
-            if(_super._nestedModels.indexOf(name) === -1)
-              _super._nestedModels.push(name);
-          })(att);
+            model.nested = true;
+            if(sup._nestedModels.indexOf(name) === -1)
+              sup._nestedModels.push(name);
+          })(att, this);
         }
       }
+      for(var i = 0; i<this._nestedModels.length; i++)
+        atts[this._nestedModels[i]].superModel = this;
     }
 
   }, {
