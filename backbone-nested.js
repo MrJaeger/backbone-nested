@@ -234,19 +234,22 @@
         , atts = _super.attributes;
       _super._nestedModels = _super._nestedModels || [];
       for(var att in atts) {
-        if(atts[att] instanceof Backbone.NestedModel && _super._nestedModels.indexOf(att) === -1) {
-          atts[att].on('all', function(eventName, model, text) {
-            var colon = eventName.indexOf(':');
-            if(colon !== -1) {
-              var realEventName = eventName.substring(0, colon+1) + att + '.' + eventName.substring(colon+1);
-              _super.trigger(realEventName, model, text);
-              _super.trigger(eventName.substring(0,colon+1) + att, model, text)
-            } else {
-              _super.trigger(eventName, model, text);
-              _super.trigger(eventName+':'+att, model, text);
-            }
-          });
-          _super._nestedModels.push(att);
+        if(atts[att] instanceof Backbone.NestedModel && (atts[att].nested == false || atts[att].nested == undefined)) {
+          (function(name) {
+            atts[name].on('all', function(eventName, model, text) {
+              var colon = eventName.indexOf(':');
+              if(colon !== -1) {
+                var realEventName = eventName.substring(0, colon+1) + name + '.' + eventName.substring(colon+1);
+                _super.trigger(realEventName, model, text);
+              } else {
+                _super.trigger(eventName, model, text);
+                _super.trigger(eventName+':'+name, model, text);
+              }
+            });
+            atts[name].nested = true;
+            if(_super._nestedModels.indexOf(name) === -1)
+              _super._nestedModels.push(name);
+          })(att);
         }
       }
     }
